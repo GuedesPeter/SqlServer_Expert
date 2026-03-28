@@ -32,6 +32,7 @@
 appsettings.Development.json
 appsettings.Local.json
 
+
 # =========================
 # Visual Studio / .NET (se usar junto)
 # =========================
