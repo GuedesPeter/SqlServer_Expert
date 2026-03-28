@@ -1,1 +1,72 @@
-vs
+# =========================
+# SQL Server / SSMS files
+# =========================
+
+# Arquivos temporários do SSMS
+*.sqlproj.user
+*.dbmdl
+*.jfm
+*.pfx
+*.publish.xml
+*.publishsettings
+
+# Query temp files
+*.sql~
+*.tmp
+
+# =========================
+# Backup e dumps (NÃO versionar)
+# =========================
+*.bak
+*.trn
+*.log
+*.ldf
+*.mdf
+*.ndf
+
+# =========================
+# Dados locais / sensíveis
+# =========================
+*.config
+*.env
+appsettings.Development.json
+appsettings.Local.json
+
+# =========================
+# Visual Studio / .NET (se usar junto)
+# =========================
+.vs/
+bin/
+obj/
+Debug/
+Release/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# =========================
+# Logs
+# =========================
+*.log
+logs/
+*.tlog
+
+# =========================
+# Sistema operacional
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Git
+# =========================
+.gitignore
+.gitkeep
+
+# =========================
+# Outros comuns
+# =========================
+*.cache
+*.pid
+*.seed
