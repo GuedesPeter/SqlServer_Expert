@@ -13,12 +13,26 @@ GO
    🧠 PENSAMENTO:
 
    1. O que define "recente"?
+   Os pedidos realizado nos últimos 365 dias
    2. Onde está a data?
+   Na tabela de Vendas/Pedidos
    3. Você precisa verificar existência ou calcular algo?
+   Preciso verificar se existem pedidos para um determinado cliente no último ano
    4. O filtro de data acontece dentro ou fora da subquery?
+   Ocorre dentro.
    5. Granularidade final?
+   Filtrar os clientes que possuem algum pedido no último ano.
 
    ========================================================= */
+SELECT
+	C.CustomerID
+FROM [Sales].[Customer] C
+WHERE EXISTS (
+	SELECT 1 FROM [Sales].[SalesOrderHeader] S
+	WHERE S.CustomerID = C.CustomerID
+	AND S.OrderDate >= DATEADD(YEAR, -1, GETDATE()) -- “data atual - 1 ano” : ✔ Isso resolve o “últimos 365 dias” de forma dinâmica
+);
+
 
    /* =========================================================
    🎯 CENÁRIO:
@@ -32,11 +46,24 @@ GO
    🧠 PENSAMENTO:
 
    1. Você está buscando presença ou ausência?
+   Ausencia (Clientes nos quais NÃO existem pedidos nos ultimos 2 anos)
    2. Qual operador resolve melhor isso?
+   NOT EXISTS
    3. Onde aplicar o filtro de data?
+   Dentro da subquery
    4. Como evitar erro lógico com clientes antigos?
+   Verificando se o cliente comprou ou não nos últimos 2 anos
 
    ========================================================= */
+   SELECT
+	C.CustomerID
+FROM [Sales].[Customer] C
+WHERE NOT EXISTS (
+	SELECT 1 FROM [Sales].[SalesOrderHeader] S
+	WHERE S.CustomerID = C.CustomerID
+	AND S.OrderDate >= DATEADD(YEAR, -2, GETDATE()) 
+);
+
 
    /* =========================================================
    🎯 CENÁRIO:
@@ -50,11 +77,32 @@ GO
    🧠 PENSAMENTO:
 
    1. Você precisa agrupar?
+   No caso que estou atuando, como não existem pedidos repetidos, não preciso agrupar
    2. Ou apenas filtrar?
+   Filtrar  se aplica.
    3. Qual cláusula resolve direto?
+   No meu cenário o WHERE resolve, mas posso fazer uma opção utilizando GROUP BY E HAVING
    4. Granularidade?
-
+   Agrupar os pedidos que possuem TotalDue > 5000
    ========================================================= */
+   -- Aqui já atende
+   SELECT
+	SalesOrderID,
+	TotalDue
+   FROM [Sales].[SalesOrderHeader]
+   WHERE TotalDue > 5000
+   ORDER BY TotalDue DESC;
+
+   -- OU opção com agrupamento.
+   SELECT
+	SalesOrderID,
+	SUM(TotalDue) AS PedRelevantes
+   FROM [Sales].[SalesOrderHeader]
+   GROUP BY SalesOrderID
+   HAVING SUM(TotalDue) > 5000
+   ORDER BY PedRelevantes DESC;
+   
+
 
    /* =========================================================
    🎯 CENÁRIO:
@@ -65,10 +113,21 @@ GO
    🧠 PENSAMENTO:
 
    1. O que significa “diferente”?
+   Produtos distintos.
    2. COUNT resolve sozinho?
+   Nesse caso se aplica o COUNT DISTINCT
    3. Qual função evita duplicidade?
+   DISTINCT
 
    ========================================================= */
+SELECT
+	COUNT(DISTINCT ProductID) AS Prod_Distintos
+FROM [Sales].[SalesOrderDetail];
+-- Nota:
+--Se a pergunta for:
+--“quantos X diferentes”
+--→ pense primeiro em COUNT(DISTINCT)
+
 
    /* =========================================================
    🎯 CENÁRIO:
