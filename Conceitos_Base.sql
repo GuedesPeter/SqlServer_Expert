@@ -307,14 +307,39 @@ identificando sua presença em diferentes anos.
 🧠 PERGUNTAS GUIADAS:
 
 1. Você quer analisar volume de pedidos ou presença ao longo do tempo?
+Presença ao longo do tempo
 2. “Evolução” significa quantidade ou distribuição temporal?
+Distribuição temporal
 3. Você precisa contar eventos ou categorias (anos)?
+Nesse caso os eventos seriam a presença de clientes em anos? Se for, então eventos...
 4. A granularidade final será:
    - cliente?
    - cliente + ano?
+   Explique melhor o que seria granularidade.
+   Se bem entendi, devo contar vezes que os clientes aparecem em cada ano para saber sua reincidencia ao longo do tempo.
 5. Você quer listar ou filtrar clientes?
-
+Acredito que filtrar as vezes que os clientes aparecem por ano.
 ========================================================= */
+
+SELECT
+	CustomerID,
+	COUNT(DISTINCT YEAR(OrderDate)) AS AnosReincidencia
+FROM [Sales].[SalesOrderHeader]
+GROUP BY CustomerID
+ORDER BY AnosReincidencia DESC;
+
+-- Opção com classificação
+SELECT
+	CustomerID,
+	COUNT(DISTINCT YEAR(OrderDate)) AS AnosReincidencia,
+	CASE
+		WHEN COUNT(DISTINCT YEAR(OrderDate)) < 2 THEN 'BAIXA FIDELIZAÇÃO'
+		WHEN COUNT(DISTINCT YEAR(OrderDate)) BETWEEN 2 AND 3 THEN 'MÉDIA FIDELIZAÇÃO'
+		ELSE 'ALTA FIDELIZAÇÃO'
+	END AS Status
+FROM [Sales].[SalesOrderHeader]
+GROUP BY CustomerID
+ORDER BY AnosReincidencia DESC;
 
 
 /* =========================================================
@@ -337,15 +362,44 @@ Identificar pedidos cujo valor é superior à média geral da empresa.
 🧠 PERGUNTAS GUIADAS:
 
 1. Você precisa de uma referência — qual?
+Preciso saber a média da empresa para comparar com o valor dos pedidos.
 2. Essa referência é por cliente ou global?
+Seria global pois preciso considerar a média geral da empresa
 3. A média deve ser calculada antes ou depois do filtro?
+Depois do filtro
 4. Você precisa comparar linha com agregado?
+Acredito que não
 5. Isso sugere:
    - WHERE?
    - HAVING?
    - subquery?
+   Subquery.
 
 ========================================================= */
+SELECT
+	SalesOrderID,
+	TotalDue
+FROM [Sales].[SalesOrderHeader]
+WHERE TotalDue > (
+	SELECT 
+		AVG(TotalDue) AS MediaGlobal
+	FROM [Sales].[SalesOrderHeader]
+)
+ORDER BY TotalDue DESC;
+
+-- Opção formatada para análise de padrão de consumo em relatório
+SELECT
+	SalesOrderID,
+	FORMAT(TotalDue,'C','pt-BR') AS ValorPedido
+FROM [Sales].[SalesOrderHeader]
+WHERE TotalDue > (
+	SELECT 
+		AVG(TotalDue) AS MediaGlobal
+	FROM [Sales].[SalesOrderHeader]
+)
+ORDER BY TotalDue DESC;
+
+
 
 
 /* =========================================================
