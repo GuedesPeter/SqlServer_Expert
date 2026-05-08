@@ -420,15 +420,27 @@ Encontrar clientes que possuem pelo menos UM pedido acima de 20000.
 🧠 PERGUNTAS GUIADAS:
 
 1. Você precisa analisar todos os pedidos ou apenas verificar existência?
+Apenas verificar a existencia.
 2. Isso é validação ou agregação?
+Validação
 3. Você quer saber:
    - o valor máximo?
    - ou apenas se existe?
+   Apenas se existe
 4. Qual abordagem é mais direta:
    - EXISTS?
    - MAX + GROUP BY?
+   EXISTS
 
 ========================================================= */
+SELECT
+	C.CustomerID
+FROM [Sales].[Customer] C
+WHERE EXISTS(
+	SELECT 1 FROM [Sales].[SalesOrderHeader] H
+	WHERE H.CustomerID = C.CustomerID
+	AND H.TotalDue > 20000
+);
 
 
 /* =========================================================
@@ -448,16 +460,30 @@ Identificar os produtos com maior preço de tabela.
 🧠 PERGUNTAS GUIADAS:
 
 1. Onde está o preço do produto?
+Na tabela de Produtos
 2. Você precisa agregar ou apenas ordenar?
+Ambos
 3. O problema pede:
    - todos os produtos?
    - ou apenas os maiores?
+   Apenas os maiores
 4. Faz sentido limitar resultados?
+Não, pois não há uma métrica explicita que sugira isso.
 5. Isso envolve:
    - ORDER BY?
    - TOP?
+   ORDER BY
 
 ========================================================= */
+
+SELECT
+    ProductID,
+    Name,
+    ListPrice
+FROM [Production].[Product]
+WHERE ListPrice > 0
+ORDER BY ListPrice DESC;
+
 
 
 /* =========================================================
@@ -477,14 +503,32 @@ Identificar o território com maior faturamento total.
 🧠 PERGUNTAS GUIADAS:
 
 1. O que define “melhor”? (quantidade ou valor?)
+Em um cenário que ressalta receita e faturamento, o ideal seriam valores
 2. Você precisa agrupar por território?
+Sim, para saber qual gera mais receita
 3. Qual métrica usar?
+A soma dos valores por territorio
 4. Como identificar o maior:
    - ORDER BY?
    - subquery?
    - TOP?
-
+   Com ORDER BY DESC
 ========================================================= */
+SELECT
+	TerritoryID,
+	SUM(TotalDue) AS Receita
+FROM [Sales].[SalesOrderHeader]
+GROUP BY TerritoryID
+ORDER BY Receita DESC;
+
+-- Opção visual para cenário analitico
+
+SELECT
+	TerritoryID,
+	FORMAT(SUM(TotalDue),'C','pt-BR') AS Receita
+FROM [Sales].[SalesOrderHeader]
+GROUP BY TerritoryID
+ORDER BY SUM(TotalDue) DESC;
 
 
 /* =========================================================
@@ -504,14 +548,39 @@ Encontrar clientes sem qualquer registro de compra.
 🧠 PERGUNTAS GUIADAS:
 
 1. Isso é presença ou ausência?
+Ausencia. Clientes que não constam na tabela de vendas
 2. Você precisa evitar duplicidade?
+Não
 3. Qual abordagem é mais segura:
    - NOT EXISTS?
    - LEFT JOIN + IS NULL?
+   NOT EXISTS
 4. Existe risco de erro lógico com JOIN?
-
+Somente com "JOIN" sim.
 ========================================================= */
+-- Opção 1 (Minha escolha)
+SELECT 
+	C.CustomerID
+FROM [Sales].[Customer] C
+WHERE NOT EXISTS(
+	SELECT 1 FROM [Sales].[SalesOrderHeader] H
+	WHERE H.CustomerID = C.CustomerID
+)
+-- Opção 2
+SELECT 
+	C.CustomerID
+FROM [Sales].[Customer] C
+LEFT JOIN [Sales].[SalesOrderHeader] H
+	ON H.CustomerID = C.CustomerID
+WHERE H.CustomerID IS NULL
 
+-- Opção 3 - Remoção dos clientes
+DELETE C
+FROM [Sales].[Customer] C
+WHERE NOT EXISTS(
+	SELECT 1 FROM [Sales].[SalesOrderHeader] H
+	WHERE H.CustomerID = C.CustomerID
+)
 
 /* =========================================================
 🧠 EX 7 — COMPORTAMENTO DE COMPRA (TICKET MÉDIO)
@@ -530,15 +599,40 @@ Calcular o ticket médio por cliente.
 🧠 PERGUNTAS GUIADAS:
 
 1. O cálculo é por pedido ou por cliente?
+Ticket médio por cliente
 2. Você precisa de quantos níveis?
    - pedido
    - cliente
+   Cliente e valor dos pedidos
 3. Precisa de subquery ou GROUP BY resolve?
+GROUP BY resolve
 4. A média será:
    - direta?
    - ou baseada em outro cálculo?
-
+   Direta
 ========================================================= */
+SELECT
+	CustomerID,
+	AVG(TotalDue) AS TicketMedio
+FROM [Sales].[SalesOrderHeader]
+GROUP BY CustomerID
+ORDER BY TicketMedio DESC;
+
+-- Opção de analise
+SELECT
+	CustomerID,
+	FORMAT(AVG(TotalDue),'C','pt-BR') AS TicketMedio
+FROM [Sales].[SalesOrderHeader]
+GROUP BY CustomerID
+ORDER BY AVG(TotalDue) DESC;
+
+-- Rankeados
+SELECT TOP 10
+	CustomerID,
+	FORMAT(AVG(TotalDue),'C','pt-BR') AS TicketMedio
+FROM [Sales].[SalesOrderHeader]
+GROUP BY CustomerID
+ORDER BY AVG(TotalDue) DESC;
 
 
 /* =========================================================
