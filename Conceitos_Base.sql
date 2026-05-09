@@ -652,12 +652,24 @@ Encontrar pedidos com mais de 10 itens.
 🧠 PERGUNTAS GUIADAS:
 
 1. O que representa “item”?
+A quantidade de produtos em um pedido
 2. Você precisa contar o quê?
+Os produtos/itens
 3. A granularidade final é pedido ou produto?
+Por Pedido
 4. O filtro ocorre antes ou depois da contagem?
+Depois
 5. HAVING entra aqui?
+Sim
 
 ========================================================= */
+SELECT
+	SalesOrderID,
+	SUM(OrderQty) AS QtItens_Por_Pedido
+FROM [Sales].[SalesOrderDetail]
+GROUP BY SalesOrderID
+HAVING SUM(OrderQty) > 10
+ORDER BY QtItens_Por_Pedido DESC;
 
 
 /* =========================================================
@@ -677,12 +689,57 @@ Identificar clientes cujo faturamento total é superior à média da base.
 🧠 PERGUNTAS GUIADAS:
 
 1. A média é global ou por grupo?
+É global. Acredito que tenho que obter a media de consumo dos clientes
 2. Você precisa calcular dois níveis?
+Sim, média e faturamento
 3. Como comparar agregado com agregado?
+Faturamento deve ser maior que a media
 4. Subquery ajuda aqui?
 
 ========================================================= */
+SELECT
+    CustomerID,
+    SUM(TotalDue) AS Faturamento
+FROM [Sales].[SalesOrderHeader]
+GROUP BY CustomerID
+HAVING SUM(TotalDue) > (
+    
+    SELECT AVG(FaturamentoCliente)
+    FROM (
+        
+        SELECT
+            SUM(TotalDue) AS FaturamentoCliente
+        FROM [Sales].[SalesOrderHeader]
+        GROUP BY CustomerID
 
+    ) AS MediaBase
+
+)
+ORDER BY Faturamento DESC;
+
+-- OU
+
+WITH FaturamentoClientes AS (
+
+    SELECT
+        CustomerID,
+        SUM(TotalDue) AS Faturamento
+    FROM [Sales].[SalesOrderHeader]
+    GROUP BY CustomerID
+
+)
+
+SELECT
+    CustomerID,
+    Faturamento
+FROM FaturamentoClientes
+WHERE Faturamento > (
+
+    SELECT AVG(Faturamento)
+    FROM FaturamentoClientes
+
+)
+ORDER BY Faturamento DESC;
 
 /* =========================================================
 🧠 EX 10 — PRODUTOS POUCO VENDIDOS
@@ -701,11 +758,14 @@ Encontrar produtos com baixo volume de vendas.
 🧠 PERGUNTAS GUIADAS:
 
 1. “baixo” significa quantidade ou valor?
+Quantidade
 2. Você precisa somar ou contar?
+Contar
 3. O filtro ocorre depois da agregação?
 4. HAVING entra?
-
 ========================================================= */
+
+
 
 
 /* =========================================================
