@@ -764,9 +764,12 @@ Contar
 3. O filtro ocorre depois da agregação?
 4. HAVING entra?
 ========================================================= */
-
-
-
+SELECT
+	ProductID,
+	SUM(OrderQty) AS QtProdutos
+FROM [Sales].[SalesOrderDetail] 
+GROUP BY ProductID
+ORDER BY QtProdutos;
 
 /* =========================================================
 🧠 EX 11 — RELATÓRIO EXECUTIVO (COMPLETO)
@@ -788,10 +791,42 @@ Para cada cliente, apresentar:
 🧠 PERGUNTAS GUIADAS:
 
 1. Quantas métricas você precisa calcular?
+Duas: Contar pedidos e Somar o faturamento
 2. Todas estão no mesmo nível?
+Não, pois depende de quanto cada cliente gastou.
 3. O CASE depende de qual cálculo?
+Se a classificação sugerida é por nivel gasto, então, o CASE depende da soma
 4. Qual é a granularidade final?
+Pelo que entendi: 1 linha(Cliente) = Total de Pedidos -> faturamento -> Nível
 5. Qual a ordem mental correta:
    (agrupamento → cálculo → classificação)
-
+   Cálculo - Classificação - Agrupamento
 ========================================================= */
+
+SELECT
+	CustomerID,
+	COUNT(SalesOrderID) AS QtPedidos,
+	SUM(TotalDue) AS Faturamento,
+	CASE
+		WHEN SUM(TotalDue) < 10000 THEN 'BAIXO NÍVEL'
+		WHEN SUM(TotalDue) BETWEEN 10000 AND 40000 THEN 'MÉDIO NÍVEL'
+		ELSE 'ALTO NÍVEL'
+	END AS NivelGasto
+FROM [Sales].[SalesOrderHeader]
+GROUP BY CustomerID
+ORDER BY Faturamento DESC;
+
+-- Opção formatada para análise visual
+
+SELECT
+	CustomerID,
+	COUNT(SalesOrderID) AS QtPedidos,
+	FORMAT(SUM(TotalDue),'C','pt-BR') AS Faturamento,
+	CASE
+		WHEN SUM(TotalDue) < 10000 THEN 'BAIXO NÍVEL'
+		WHEN SUM(TotalDue) BETWEEN 10000 AND 40000 THEN 'MÉDIO NÍVEL'
+		ELSE 'ALTO NÍVEL'
+	END AS NivelGasto
+FROM [Sales].[SalesOrderHeader]
+GROUP BY CustomerID
+ORDER BY SUM(TotalDue) DESC;
