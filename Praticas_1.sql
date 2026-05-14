@@ -1,3 +1,6 @@
+USE AdventureWorks
+GO
+
 /* =========================================================
 🧠 EX 1 — CLIENTES ACIMA DA MÉDIA DO TERRITÓRIO
 =========================================================
@@ -19,15 +22,44 @@ Comparar clientes com a média regional de consumo.
 🧠 PERGUNTAS GUIADAS:
 
 1. A comparação é global ou segmentada?
+Segmentada por território
 2. Você terá quantos níveis de agregação?
+Pelo que vejo dois: Cliente e território
 3. A média será de pedidos ou clientes?
+Será referente a média dos faturamentos dos clientes
 4. CTE ajudaria?
+Sim
 5. A granularidade final será:
    - território?
    - cliente?
    - cliente dentro do território?
-
+   Cliente + Territorio -> Territorio
 ========================================================= */
+WITH FaturamentoCliente AS (
+
+	SELECT
+		CustomerID,
+		TerritoryID,
+		SUM(TotalDue) AS Faturamento
+	FROM [Sales].[SalesOrderHeader]
+	GROUP BY CustomerID,TerritoryID
+),
+MediaTerritorio AS (
+	SELECT
+		TerritoryID,
+		AVG(Faturamento) AS MediaFaturamento
+	FROM FaturamentoCliente
+	GROUP BY TerritoryID
+	
+)
+SELECT
+	C.CustomerID,
+	FORMAT(C.Faturamento,'C','pt-BR') AS FatCliente,
+	FORMAT(M.MediaFaturamento,'C','pt-BR') AS MedRegiao
+FROM FaturamentoCliente C
+JOIN MediaTerritorio M
+ON M.TerritoryID = C.TerritoryID
+WHERE C.Faturamento > M.MediaFaturamento
 
 
 
