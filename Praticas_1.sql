@@ -84,12 +84,81 @@ Comparar faturamento antigo vs recente dos clientes.
 🧠 PERGUNTAS GUIADAS:
 
 1. Você precisará dividir períodos?
+Sim
 2. Como separar “antigo” e “recente”?
+Definindo uma métrica com base nas datas de pedidos dispostas na base de dados
 3. DATEADD entra?
+Não utilizei na soluçãi
 4. Quantos níveis de cálculo existirão?
+Apenas um, a soma.
 5. CASE ajudaria na classificação?
+Sim.
 
 ========================================================= */
+WITH Antigo AS (
+
+	SELECT
+		CustomerID,
+		SUM(TotalDue) AS Fatura1
+	FROM [Sales].[SalesOrderHeader]
+	WHERE OrderDate BETWEEN '2011-01-01' AND '2012-12-31'
+	GROUP BY CustomerID
+),
+Recente AS (
+	
+	SELECT
+		CustomerID,
+		SUM(TotalDue) AS Fatura2
+	FROM [Sales].[SalesOrderHeader]
+	WHERE OrderDate BETWEEN '2013-01-01' AND '2014-12-31'
+	GROUP BY CustomerID
+)
+SELECT
+    A.CustomerID,
+    A.Fatura1 AS FaturamentoAntigo,
+    R.Fatura2 AS FaturamentoRecente,
+    CASE
+        WHEN R.Fatura2 > A.Fatura1 THEN 'Cliente Recente'
+        WHEN R.Fatura2 = A.Fatura1 THEN 'Cliente Equilibrado'
+        ELSE 'Risco de Churn'
+    END AS Status
+FROM Antigo A
+JOIN Recente R 
+    ON R.CustomerID = A.CustomerID;
+
+-- Opção para análise do time de retenção
+
+WITH Antigo AS (
+
+	SELECT
+		CustomerID,
+		SUM(TotalDue) AS Fatura1
+	FROM [Sales].[SalesOrderHeader]
+	WHERE OrderDate BETWEEN '2011-01-01' AND '2012-12-31'
+	GROUP BY CustomerID
+),
+Recente AS (
+	
+	SELECT
+		CustomerID,
+		SUM(TotalDue) AS Fatura2
+	FROM [Sales].[SalesOrderHeader]
+	WHERE OrderDate BETWEEN '2013-01-01' AND '2014-12-31'
+	GROUP BY CustomerID
+)
+SELECT
+    A.CustomerID,
+    FORMAT(A.Fatura1,'C','pt-BR') AS FaturamentoAntigo,
+    FORMAT(R.Fatura2,'C','pt-BR') AS FaturamentoRecente,
+    CASE
+        WHEN R.Fatura2 > A.Fatura1 THEN 'Cliente Recente'
+        WHEN R.Fatura2 = A.Fatura1 THEN 'Cliente Equilibrado'
+        ELSE 'Risco de Churn'
+    END AS Status
+FROM Antigo A
+JOIN Recente R 
+    ON R.CustomerID = A.CustomerID
+ORDER BY Status DESC; -- Prioriza os clientes com riscos
 
 
 
