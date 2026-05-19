@@ -183,14 +183,39 @@ supera a média dos demais produtos.
 1. “performance” significa:
    - valor?
    - quantidade?
+   Quantidade
 2. A média será calculada sobre quê?
+Sobre a quantidade geral dos produtos vendidos
 3. Você precisará comparar:
    - linha com agregado?
    - agregado com agregado?
+   Linha com agregado
 4. CTE pode melhorar legibilidade?
+ACredito que sim possibilitando comparar a media geral com as quantidades acima da media
 5. Granularidade final?
-
+1 linha = Produto + Media + quantidade
 ========================================================= */
+WITH SomaProd AS (
+
+	SELECT
+		ProductID,
+		SUM(OrderQty) AS QtSomada
+	FROM [Sales].[SalesOrderDetail]
+	GROUP BY ProductID
+),
+MediaProd AS (
+	SELECT
+		AVG(QtSomada) AS Media
+	FROM SomaProd
+)
+SELECT
+	S.ProductID,
+	S.QtSomada,
+	M.Media
+FROM SomaProd S
+CROSS JOIN MediaProd M
+WHERE S.QtSomada > M.Media
+ORDER BY S.QtSomada DESC;
 
 
 
@@ -214,12 +239,103 @@ Criar classificação considerando:
 🧠 PERGUNTAS GUIADAS:
 
 1. Quantas métricas existirão?
+3 metricas
 2. O CASE dependerá de múltiplas regras?
+Sim, mas vamos visualizar passo a passo isso
 3. COUNT DISTINCT entra?
+Sim, para atuar na distinção dos anos
 4. Qual será a granularidade?
+1 linha = 1 cliente
 5. CTE ajudaria na organização?
-
+Acredito que sim, de modo a isolar cada métrica
 ========================================================= */
+-- Solução Inicial
+WITH EtapaPedidos AS (
+	SELECT
+		CustomerID,
+		COUNT(SalesOrderID) AS QtPedidos,
+		CASE
+			WHEN COUNT(SalesOrderID) <= 4 THEN 'Baixo Fluxo'
+			WHEN COUNT(SalesOrderID) BETWEEN 5 AND 10 THEN 'Fluxo Regular'
+			ELSE 'Alto Fluxo'
+		END AS StatusPedidos
+	FROM [Sales].[SalesOrderHeader]
+	GROUP BY CustomerID
+),
+EtapaFaturamento AS (
+		SELECT
+		CustomerID,
+		SUM(TotalDue) AS Faturamento,
+		CASE
+			WHEN SUM(TotalDue)  < 10000 THEN 'Baixo Faturamento'
+			WHEN SUM(TotalDue)  BETWEEN 10000 AND 40000 THEN 'Faturamento Regular'
+			ELSE 'Alto Faturamento'
+		END AS StatusFaturamento
+	FROM [Sales].[SalesOrderHeader]
+	GROUP BY CustomerID
+),
+EtapaTempo AS (
+		SELECT
+		CustomerID,
+		COUNT(DISTINCT YEAR(OrderDate)) AS AnosComVendas,
+		CASE
+			WHEN COUNT(DISTINCT YEAR(OrderDate)) < 2 THEN 'Baixa recorrencia'
+			WHEN COUNT(DISTINCT YEAR(OrderDate)) BETWEEN 2 AND 3 THEN 'Recorrencia Regular'
+			ELSE 'Alta Recorrencia'
+		END AS RecorrenciaAnual
+	FROM [Sales].[SalesOrderHeader]
+	GROUP BY CustomerID
+)
+SELECT 
+	E1.CustomerID,
+	E2.Faturamento,
+	E3.AnosComVendas,
+	E1.StatusPedidos,
+	E2.StatusFaturamento,
+	E3.RecorrenciaAnual
+FROM EtapaPedidos E1
+JOIN EtapaFaturamento E2
+	ON E2.CustomerID = E1.CustomerID
+JOIN EtapaTempo E3
+	ON E3.CustomerID = E1.CustomerID
+ORDER BY E1.CustomerID;
+
+-- Estrutura Ideal
+WITH BaseClientes AS (
+    SELECT
+        CustomerID,
+        COUNT(SalesOrderID) AS QtPedidos,
+        SUM(TotalDue) AS Faturamento,
+        COUNT(DISTINCT YEAR(OrderDate)) AS AnosComVendas
+    FROM Sales.SalesOrderHeader
+    GROUP BY CustomerID
+)
+SELECT
+    CustomerID,
+    Faturamento,
+    AnosComVendas,
+
+    CASE
+        WHEN QtPedidos <= 4 THEN 'Baixo Fluxo'
+        WHEN QtPedidos BETWEEN 5 AND 10 THEN 'Fluxo Regular'
+        ELSE 'Alto Fluxo'
+    END AS StatusPedidos,
+
+    CASE
+        WHEN Faturamento < 10000 THEN 'Baixo Faturamento'
+        WHEN Faturamento BETWEEN 10000 AND 40000 THEN 'Faturamento Regular'
+        ELSE 'Alto Faturamento'
+    END AS StatusFaturamento,
+
+    CASE
+        WHEN AnosComVendas < 2 THEN 'Baixa Recorrencia'
+        WHEN AnosComVendas BETWEEN 2 AND 3 THEN 'Recorrencia Regular'
+        ELSE 'Alta Recorrencia'
+    END AS RecorrenciaAnual
+
+FROM BaseClientes
+ORDER BY CustomerID;
+
 
 
 
