@@ -359,14 +359,37 @@ Encontrar pedidos acima da média individual do cliente.
 🧠 PERGUNTAS GUIADAS:
 
 1. A média é global ou individual?
+Individual
 2. Quantos níveis de agregação existem?
+Um nivel
 3. Você comparará:
    - pedido vs cliente?
+   Media de pedidos do cliente vs Valor do pedido do cliente 
+   Pedido vs Pedido
 4. Subquery ou CTE?
+CTE
 5. Granularidade final?
-
+1 linha = Cliente + Pedido (Valor discrepante)
 ========================================================= */
 
+WITH MediaIndividual AS (
+
+	SELECT
+		CustomerID,
+		AVG(TotalDue) AS MediaCliente
+	FROM [Sales].[SalesOrderHeader]
+	GROUP BY CustomerID
+)
+SELECT 
+	S.SalesOrderID,
+	M.CustomerID,
+	M.MediaCliente,
+	S.TotalDue
+FROM MediaIndividual M
+JOIN [Sales].[SalesOrderHeader] S
+ON S.CustomerID = M.CustomerID
+WHERE S.TotalDue > M.MediaCliente
+ORDER BY M.CustomerID;
 
 
 /* =========================================================
@@ -386,13 +409,31 @@ Encontrar produtos sem vendas recentes.
 🧠 PERGUNTAS GUIADAS:
 
 1. Isso é presença ou ausência?
+Ausencia (Sem vendas)
 2. EXISTS ou NOT EXISTS?
+NOT EXISTS (Não existem no último ano, por exemplo)
 3. Onde entra o filtro de data?
+Na subquery
 4. DATEADD será necessário?
+Como a base considera o Ano de 2014 o mais atual, acerdito que não faça sentido utilizar essa função.
+Eu a utilizaria se eu fosse considerar o nosso ano atual.
 5. Granularidade final?
-
+1 linha = 1 produto sem venda recente
 ========================================================= */
+SELECT
+    P.ProductID
+FROM [Production].[Product] P
+WHERE NOT EXISTS (
 
+    SELECT 1
+    FROM [Sales].[SalesOrderDetail] D
+    JOIN [Sales].[SalesOrderHeader] H
+        ON H.SalesOrderID = D.SalesOrderID
+
+    WHERE D.ProductID = P.ProductID
+    AND YEAR(H.OrderDate) = 2014
+)
+ORDER BY P.ProductID;
 
 
 /* =========================================================
