@@ -459,12 +459,39 @@ Mas agora o relatório deve ser construído usando CTE.
 🧠 PERGUNTAS GUIADAS:
 
 1. O que deve ficar dentro da CTE?
+As metricas solicitadas para cada cliente
 2. O CASE depende de quais métricas?
+O exercício não deixa explicita uma classificação, logo posso sugerir alguma com base nas métricas levantadas.
 3. Quais cálculos podem ser reaproveitados?
+Faturamento e ticket medio
 4. Qual a granularidade?
+1 linha = 1 cliente
 5. Como melhorar legibilidade?
-
+Adicionando para cada cliente o nome da sua métrica correspondente
 ========================================================= */
+WITH DadosCliente AS (
+
+	SELECT
+		CustomerID AS Cliente,
+		COUNT(SalesOrderID) AS TotalPedidos,
+		SUM(TotalDue) AS Faturamento,
+		AVG(TotalDue) AS TicketMedio
+	FROM [Sales].[SalesOrderHeader]
+	GROUP BY CustomerID
+)
+SELECT 
+	Cliente,
+	TotalPedidos,
+	Faturamento,
+	TicketMedio,
+	CASE
+		WHEN TotalPedidos >= 7 THEN 'ALTO FLUXO'
+		WHEN TotalPedidos BETWEEN 6 AND 4 THEN 'FLUXO REGULAR'
+		ELSE 'BAIXO FLUXO'
+	END AS FluxoDoCliente
+FROM DadosCliente
+ORDER BY Cliente;
+
 
 
 
@@ -489,12 +516,35 @@ mesmo estando cadastrados há muito tempo.
 🧠 PERGUNTAS GUIADAS:
 
 1. COUNT DISTINCT entra?
+Sim
 2. Como medir recorrência?
+Anos distintos de compra
 3. DATEADD ajudaria?
+Não
 4. CASE faz sentido?
+Sim
 5. Granularidade final?
+1 linha = 1 cliente
 
 ========================================================= */
+WITH DistincaoTempo AS (
+
+	SELECT
+		CustomerID AS Cliente,
+		COUNT(DISTINCT YEAR(OrderDate)) AS AnosDistintos
+	FROM [Sales].[SalesOrderHeader]
+	GROUP BY CustomerID
+)
+SELECT
+	Cliente,
+	AnosDistintos,
+	CASE
+		WHEN AnosDistintos >= 4 THEN 'Alta Regularidade'
+		WHEN AnosDistintos BETWEEN 2 AND 3 THEN 'Regular'
+		ELSE 'Irregular'
+	END AS StatusCliente
+FROM DistincaoTempo
+ORDER BY Cliente;
 
 
 
