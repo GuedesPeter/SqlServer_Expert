@@ -567,13 +567,56 @@ ultrapassa determinado valor.
 🧠 PERGUNTAS GUIADAS:
 
 1. O UPDATE atuará diretamente?
+O UPDATE alterará uma coluna de classificação
+dos clientes que atenderem à regra
 2. Você validaria antes com SELECT?
+Sim. Utilizaria o SELECT para consultar esses clientes que estarão na regra
 3. EXISTS ajuda?
+Não parece necessário neste momento,
+mas dependerá da modelagem utilizada
+para identificar e atualizar os clientes.
 4. Como evitar atualização incorreta?
+Filtrando no WHERE apenas os clientes que atendem a regra. Nese caso eu montaria inicialmente no SELECT para validar e 
+somente depois da certeza eu aplicaria no UPDATE.
 5. CTE pode ajudar?
+Sim, pode ajudar a organizar e validar
+os clientes que serão atualizados,
+principalmente quando a regra ficar mais complexa.
+
+RESOLUÇÃO:
+
+Diante do prblema apresentado e pensando na informação(Dado), eu não faria o uso de UPDATE.
+Como sugestão, criaria uma VIEW ou Stored Procedure para exibir o cenário solicitado pela empresa.
 
 ========================================================= */
+CREATE OR ALTER VIEW ClientesVip 
+AS
+SELECT
+	CustomerID,
+	SUM(TotalDue) AS Faturamento
+FROM [Sales].[SalesOrderHeader]
+GROUP BY CustomerID
+HAVING SUM(TotalDue) > 200000;
 
+-- OU
+
+CREATE OR ALTER PROCEDURE ListarClientesVip
+(
+    @ValorMinimo MONEY
+)
+AS
+BEGIN
+
+    SET NOCOUNT ON;
+
+    SELECT
+        CustomerID,
+        SUM(TotalDue) AS Faturamento
+    FROM Sales.SalesOrderHeader
+    GROUP BY CustomerID
+    HAVING SUM(TotalDue) >= @ValorMinimo;
+
+END;
 
 
 /* =========================================================
