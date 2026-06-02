@@ -637,9 +637,42 @@ Excluir produtos sem histórico de vendas.
 🧠 PERGUNTAS GUIADAS:
 
 1. DELETE direto é seguro?
+Jamais, por mais simples que seja a remoção por boa prática se faz necessário a validação(SELECT) inicialmente.
 2. Como validar antes?
+Aplicando a lógica com SELECT
 3. NOT EXISTS entra?
+Sim, para verificar os produtos que não existem na tabela de vendas
 4. Existe risco operacional?
+Se a transação não for "protegida" existe sim.
 5. TRANSACTION faria sentido futuramente?
+Se tratando de um DELETE faria total sentido possibilitando a opção de Rollback.
 
+-- RESOLUÇÃO
+
+Neste cenário eu não aplicaria o DELETE.
+Como sugestão deixo uma Stored Procedure que permite a emissão de um relatório 
+para a tomada de decisão.
 ========================================================= */
+
+
+
+CREATE OR ALTER PROCEDURE sp_ListaProdutosNuncaVendidos
+AS
+BEGIN
+
+	SET NOCOUNT ON;
+
+	SELECT
+		P.ProductID,
+		P.Name,
+		P.ProductNumber,
+		P.MakeFlag,
+		P.FinishedGoodsFlag
+	FROM Production.Product P
+	WHERE NOT EXISTS (
+		SELECT 1
+		FROM Sales.SalesOrderDetail S
+		WHERE S.ProductID = P.ProductID
+	);
+
+END;
