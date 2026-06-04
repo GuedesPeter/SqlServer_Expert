@@ -23,16 +23,28 @@ Identificar clientes com alta variedade de produtos comprados.
 1. “variedade” significa:
    - quantidade total?
    - produtos distintos?
+Produtos Distintos
 2. COUNT DISTINCT entra?
+Sim
 3. A granularidade será:
    - cliente?
    - cliente + produto?
+Cliente + Produtos distintos
 4. HAVING faz sentido?
+Não pois não há uma métrica a comprara, por exemplo
 5. Como ordenar os clientes mais diversificados?
+ORDER BY DESC. (Com produtos mais diversificados para os menos)
 
 ========================================================= */
 
-
+SELECT
+	H.CustomerID AS Cliente,
+	COUNT(DISTINCT D.ProductID) AS ProdutosDistintos
+FROM [Sales].[SalesOrderHeader] H
+JOIN [Sales].[SalesOrderDetail] D
+ ON D.SalesOrderID = H.SalesOrderID
+GROUP BY H.CustomerID
+ORDER BY ProdutosDistintos DESC;
 
 /* =========================================================
 🧠 EX 12 — ANÁLISE DE CRESCIMENTO ANUAL
@@ -51,18 +63,45 @@ Comparar o faturamento anual da empresa.
 🧠 PERGUNTAS GUIADAS:
 
 1. Qual dimensão temporal será usada?
+Anos
 2. O agrupamento será por:
    - mês?
    - ano?
+Por ano
 3. SUM ou COUNT?
+Se tratando de faturamento, SUM()
 4. A granularidade final será:
    - ano?
    - ano + cliente?
+Ano
 5. ORDER BY ajudará na análise histórica?
+Ajuda na ordenação dos anos
 
 ========================================================= */
+SELECT
+	YEAR(OrderDate) AS Ano,
+	SUM(TotalDue) AS Faturamento
+FROM [Sales].[SalesOrderHeader]
+GROUP BY YEAR(OrderDate)
+ORDER BY Ano;
 
+-- Opção formatada apenas para relatório visual de análise
 
+SELECT
+	YEAR(OrderDate) AS Ano,
+	FORMAT(SUM(TotalDue),'C','pt-BR') AS Faturamento
+FROM [Sales].[SalesOrderHeader]
+GROUP BY YEAR(OrderDate)
+ORDER BY Ano;
+
+-- Opção para análise mostrando os anos com maior Faturamento
+
+SELECT
+	YEAR(OrderDate) AS Ano,
+	FORMAT(SUM(TotalDue),'C','pt-BR') AS Faturamento
+FROM [Sales].[SalesOrderHeader]
+GROUP BY YEAR(OrderDate)
+ORDER BY SUM(TotalDue) DESC;
 
 /* =========================================================
 🧠 EX 13 — PRODUTOS COM ALTA DEPENDÊNCIA DE DESCONTO
@@ -82,16 +121,32 @@ Encontrar produtos frequentemente vendidos com desconto.
 🧠 PERGUNTAS GUIADAS:
 
 1. Onde está a informação de desconto?
+Na tabela de detalhes da venda
 2. Você precisa:
    - validar existência?
    - medir frequência?
+Frequencia
 3. COUNT ajuda?
+Ajuda na contagem dos produtos que foram vendidos com desconto
+possibilitando visualizar quantas vezes ele fora vendido assim.
+O cenário não solicita que eu conte, mas sim que eu apenas identifique.
 4. O filtro será:
    - WHERE?
    - HAVING?
+WHERE
 5. Granularidade final?
-
+Produto.
 ========================================================= */
+	SELECT 
+		D.ProductID AS IdProduto,
+		P.Name AS Produto,
+		COUNT(D.ProductID) AS QtProd_Vendido_Com_Desconto
+	FROM [Sales].[SalesOrderDetail] D
+	JOIN [Production].[Product] P 
+	 ON P.ProductID = D.ProductID
+	WHERE D.UnitPriceDiscount > 0
+	GROUP BY D.ProductID, P.Name	
+	ORDER BY QtProd_Vendido_Com_Desconto DESC;
 
 
 
