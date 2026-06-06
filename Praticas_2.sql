@@ -171,12 +171,31 @@ Encontrar clientes que:
 1. Você terá:
    - condição de presença?
    - condição de ausência?
+Ausencia
 2. DATEADD entra?
+Não pois não quero pegar a data atual (ano de 2026) para me basear na lógica.
 3. EXISTS ou NOT EXISTS?
+NOT EXISTS
 4. Quantos níveis de validação existirão?
+Visualizo dois, tempo e faturamento
 5. CASE ajudaria?
-
+Sem pensar em query, visualizando o cenário, acredito que não pois inicialmente eu não vejo uma ideia de classificação.
 ========================================================= */
+SELECT
+    H.CustomerID AS Cliente,
+    SUM(H.TotalDue) AS Faturamento
+FROM Sales.SalesOrderHeader H
+WHERE NOT EXISTS
+(
+    SELECT 1
+    FROM Sales.SalesOrderHeader S
+    WHERE S.CustomerID = H.CustomerID
+      AND S.OrderDate > '20130101'
+)
+GROUP BY
+    H.CustomerID
+ORDER BY
+    Faturamento DESC;
 
 
 
