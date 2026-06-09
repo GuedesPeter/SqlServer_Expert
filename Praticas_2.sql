@@ -283,7 +283,12 @@ SELECT
     A.IdTerritorio, 
     R.Territorio,
     A.FatAntigo AS FaturamentoAntigo,
-    R.FatRecente AS FaturamentoRecente
+    R.FatRecente AS FaturamentoRecente,
+    CASE
+        WHEN A.FatAntigo > R.FatRecente THEN 'PERDEU FORÇA'
+        WHEN A.FatAntigo = R.FatRecente THEN 'ESTÁVEL'
+        ELSE 'GANHOU FORÇA'
+    END AS StatusComercial
 FROM Antigo A
 JOIN Recente R
  ON R.IdTerritorio = A.IdTerritorio
@@ -311,14 +316,23 @@ Encontrar pedidos com alta variedade de produtos.
 1. Você precisa medir:
    - quantidade total?
    - diversidade?
+   Diversidade de produtos (Variedade)
 2. COUNT DISTINCT entra?
+Sim, para contar os pedidos com maior quantidade de produtos distintos
 3. Granularidade final?
+Pedido
 4. HAVING será necessário?
+Não, pois não um número esécífico para definir o que seria "alta variedade de produtos"
 5. ORDER BY ajuda na priorização?
-
+Sim, ordenara os pedidos com maior variedade de produtos.
 ========================================================= */
 
-
+SELECT 
+    SalesOrderID,
+    COUNT(DISTINCT ProductID) AS QtdProdutosDistintos
+FROM [Sales].[SalesOrderDetail]
+GROUP BY SalesOrderID
+ORDER BY QtdProdutosDistintos DESC;
 
 /* =========================================================
 🧠 EX 17 — CLIENTES ACIMA DA MÉDIA DE PEDIDOS
