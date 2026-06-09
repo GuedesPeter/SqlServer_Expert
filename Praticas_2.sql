@@ -216,16 +216,78 @@ Comparar faturamento antigo vs recente por território.
 🧠 PERGUNTAS GUIADAS:
 
 1. Você precisará separar períodos?
+Sim, de modo a dar uma idéia do que fora faturado antigamente diante do que fora faturado recentemente
 2. O agrupamento será:
    - território?
    - território + ano?
+Da ótica inicial tendo a optar por território + ano
 3. DATEADD ajudará?
+Aqui parto do mesmo ponto dos exercícios anteriores.
+A base não considera a linha de tempo atual (2026), então não irei utilizá-lo
 4. SUM será suficiente?
+Sim, para calcular os faturamentos.
 5. CTE pode organizar melhor?
-
+Da ótica inicial posso considerar útil, talvez visando utiliza-la para definir os
+faturamentos antigos e recentes.
+Aqui há uma ressalva: Devo avaliar durante a construção do cenário para saber se vale encaixar esse conceito.
 ========================================================= */
+-- Análise Inicial
+SELECT
+    T.TerritoryID AS IdTerritorio,
+    T.Name AS Territorio,
+    YEAR(H.OrderDate) AS Ano,
+    SUM(H.TotalDue) AS Faturamento
+FROM Sales.SalesOrderHeader H
+JOIN Sales.SalesTerritory T
+    ON T.TerritoryID = H.TerritoryID
+GROUP BY
+    T.TerritoryID,
+    T.Name,
+    YEAR(H.OrderDate)
+ORDER BY
+    IdTerritorio,
+    Ano;
 
+-- CTE [Resolução]
+WITH Antigo AS (
 
+SELECT
+    T.TerritoryID AS IdTerritorio,
+    T.Name AS Territorio,
+    SUM(H.TotalDue) AS FatAntigo
+FROM Sales.SalesOrderHeader H
+JOIN Sales.SalesTerritory T
+    ON T.TerritoryID = H.TerritoryID
+WHERE H.OrderDate < '2013-01-01'
+GROUP BY
+    T.TerritoryID,
+    T.Name
+
+),
+Recente AS (
+    
+    SELECT
+    T.TerritoryID AS IdTerritorio,
+    T.Name AS Territorio,
+    SUM(H.TotalDue) AS FatRecente
+FROM Sales.SalesOrderHeader H
+JOIN Sales.SalesTerritory T
+    ON T.TerritoryID = H.TerritoryID
+WHERE H.OrderDate > '2012-12-31'
+GROUP BY
+    T.TerritoryID,
+    T.Name
+)
+
+SELECT
+    A.IdTerritorio, 
+    R.Territorio,
+    A.FatAntigo AS FaturamentoAntigo,
+    R.FatRecente AS FaturamentoRecente
+FROM Antigo A
+JOIN Recente R
+ ON R.IdTerritorio = A.IdTerritorio
+ORDER BY A.IdTerritorio;
 
 /* =========================================================
 🧠 EX 16 — PEDIDOS COM MUITOS PRODUTOS DIFERENTES
