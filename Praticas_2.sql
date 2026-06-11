@@ -354,14 +354,41 @@ supera a média da base.
 1. A média será de:
    - pedidos?
    - faturamento?
+Pedidos - "Encontrar clientes cuja quantidade de pedidos
+supera a média da base."
 2. Quantos níveis de agregação existirão?
+Pela ótica inicial acredito que dois, mas devo avaliar ao longo da construção
 3. Subquery ou CTE?
+Se há uma ideia de comparação, inicialmente considero a CTE
 4. Você comparará:
    - agregado com agregado?
+Possivelmente. Qtde Pedidos X Média Base
 5. Granularidade final?
-
+Cliente 
 ========================================================= */
-
+WITH QtPedidosPorCliente AS (
+    SELECT
+        CustomerID,
+        COUNT(SalesOrderID) AS QtPedidos
+    FROM [Sales].[SalesOrderHeader]
+    GROUP BY CustomerID
+),
+MediaBase AS (
+    SELECT
+        AVG(QtPedidos) AS MediaBase
+    FROM QtPedidosPorCliente
+)
+SELECT
+    A.CustomerID,
+    A.QtPedidos,
+    B.MediaBase,
+    CASE
+        WHEN A.QtPedidos > B.MediaBase THEN 'ACIMA'
+        WHEN A.QtPedidos = B.MediaBase THEN 'EQUILIBRADO'
+        ELSE 'ABAIXO'
+    END AS StatusFrequencia
+FROM QtPedidosPorCliente A
+CROSS JOIN MediaBase B
 
 
 /* =========================================================
@@ -385,11 +412,15 @@ Atualizar uma coluna de classificação:
 🧠 PERGUNTAS GUIADAS:
 
 1. O CASE será usado onde?
+Após a obtenção do faturamento
 2. UPDATE direto é seguro?
+Não. Por mais simples que seja é sempre uma boa prática realizar uma validação com SELECT antes de aplicar o UPDATE.
 3. Vale validar antes com SELECT?
+Totalmente
 4. EXISTS ajudaria?
+Inicialmente não consigo visualizar, preciso de uma construção melhor do cenário para considerar seu uso.
 5. CTE pode organizar os cálculos?
-
+Preciso visualizar a construção antes mas creio que seja útil
 ========================================================= */
 
 
