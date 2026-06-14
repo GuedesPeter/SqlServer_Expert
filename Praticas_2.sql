@@ -422,8 +422,76 @@ Inicialmente não consigo visualizar, preciso de uma construção melhor do cen�
 5. CTE pode organizar os cálculos?
 Preciso visualizar a construção antes mas creio que seja útil
 ========================================================= */
+-- Cenário Pedagógico
+-- Criando nova coluna para armazenar a Info
+BEGIN TRY
 
+    BEGIN TRANSACTION;
 
+        ALTER TABLE Sales.Customer
+        ADD ClassificacaoCliente VARCHAR(30);
+
+    COMMIT TRANSACTION;
+
+END TRY
+BEGIN CATCH
+
+    IF @@TRANCOUNT > 0
+        ROLLBACK TRANSACTION;
+
+    THROW;
+
+END CATCH;
+
+-- Validando os dados com métrica pré definida antes da inserção na nova coluna
+SELECT
+    A.CustomerID AS Cliente,
+    SUM(B.TotalDue) AS Faturamento,
+    CASE 
+        WHEN SUM(B.TotalDue) >= 50000 THEN 'VIP'
+        WHEN SUM(B.TotalDue) < 50000 AND SUM(B.TotalDue) >= 20000 THEN 'MÉDIO'
+        ELSE 'BÁSICO'
+    END AS ClassificacaoCliente
+FROM [Sales].[Customer] A
+JOIN [Sales].[SalesOrderHeader] B
+ ON B.CustomerID = A.CustomerID
+GROUP BY A.CustomerID
+
+-- Adicionando as Infos a nova coluna
+BEGIN TRY
+
+    BEGIN TRANSACTION;
+
+        WITH FaturamentoCliente AS
+        (
+            SELECT
+                CustomerID,
+                SUM(TotalDue) AS Faturamento
+            FROM Sales.SalesOrderHeader
+            GROUP BY CustomerID
+        )
+        UPDATE C
+        SET ClassificacaoCliente =
+            CASE
+                WHEN F.Faturamento >= 50000 THEN 'VIP'
+                WHEN F.Faturamento >= 20000 THEN 'MÉDIO'
+                ELSE 'BÁSICO'
+            END
+        FROM Sales.Customer C
+        JOIN FaturamentoCliente F
+            ON F.CustomerID = C.CustomerID;
+
+    COMMIT TRANSACTION;
+
+END TRY
+BEGIN CATCH
+
+    IF @@TRANCOUNT > 0
+        ROLLBACK TRANSACTION;
+
+    THROW;
+
+END CATCH;
 
 /* =========================================================
 🧠 EX 19 — IDENTIFICAÇÃO DE PEDIDOS DUPLICADOS
