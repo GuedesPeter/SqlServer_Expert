@@ -1,3 +1,6 @@
+USE AdventureWorks
+GO
+
 /*
 🏆 TESTE TÉCNICO SQL SERVER (2026)
 Objetivo
@@ -8,7 +11,7 @@ Este teste simula um desafio técnico semelhante ao que poderia ser aplicado em 
 	Desenvolvedor SQL Server
 	Analista de Banco de Dados
 
-Utilize a base AdventureWorks.
+Utilize a base AdventureWorks [Comando disponível nas linhas 1 e 2].
 
 ⚠️ REGRAS DO TESTE
 Durante o teste
@@ -85,12 +88,17 @@ Sua tarefa é analisar o requisito.
 Explique:
 
 • Quais perguntas faria ao solicitante?
+Qual métrica ou requisito determinará que o cliente se enquadre no status de "mais importante"?
+Após a definição de uma métrica para os clientes com este status, quais informações relacionadas
+a eles gostaria de visualizar ou seriam mais interessantes para uma possível análise?
 
 • Quais métricas poderiam representar
 essa importância?
+Posso citar algumas como faturamente, volume de compras, frequencia ao longo do tempo, etc.
 
 • Existe apenas uma resposta correta?
-
+Inicialmente o cenário apresenta várias possibilidades ou caminhos a serem seguidos, o que não
+garante uma única resposta correta ou solução direta/imediata.
 ========================================================= */
 
 -- Ex.2
@@ -111,14 +119,39 @@ PERGUNTAS GUIADAS
 
 1. Qual será a granularidade?
 
+1 Linha = 1 Cliente
+
 2. Quais tabelas serão utilizadas?
 
+Conforme analisei, a tabela [Sales].[SalesOrderHeader] contém as informações necessárias
+para obter o cliente e seu faturamento.
+
 3. Quais JOINs serão necessários?
+Seguindo como base a resposta anterior, apenas a tabela [Sales].[SalesOrderHeader] será necessária
+neste momento, pois já contem as informações necessárias.Isso elimina o uso de Joins neste momento.
 
 4. Como provar que sua granularidade
 está correta?
 
+Neste momento eu preciso exibir o cliente com seu faturamento, então cada linha irá conter um cliente com sua 
+respectiva métrica(Faturamento).
+
 ========================================================= */
+-- Solução a ser aplicada em um ambiente de produção
+SELECT TOP 15
+	CustomerID AS IdCliente,
+	SUM(TotalDue) AS Faturamento
+FROM [Sales].[SalesOrderHeader]
+GROUP BY CustomerID
+ORDER BY Faturamento DESC;
+-- Solução para apresentação/relatório para a diretoria
+SELECT TOP 15
+	CustomerID AS IdCliente,
+	FORMAT(SUM(TotalDue),'C','pt-BR') AS Faturamento
+FROM [Sales].[SalesOrderHeader]
+GROUP BY CustomerID
+ORDER BY SUM(TotalDue) DESC;
+
 
 -- Ex.3
 /* =========================================================
@@ -135,13 +168,68 @@ de quantidade de clientes.
 Antes da SQL responda:
 
 • Quantos níveis de agregação existem?
-
+Pela ótica inicial posso observar dois níveis: Faturamento do cliente e média geral da empresa.
 • Como pretende comparar
 agregado com agregado?
 
+Obtendo inicialmente o faturamente de cada cliente.
+Em seguida obtenho a média geral da empresa.
+Por fim realizo a comparação para identificar os clientes com o faturamento acima da média geral da empresa.
+
 • CTE faz sentido?
+Sim.
+A CTE é útil para organizar o cenário segregando cada agragação a serem comparadas.
+
+Observação:
+Como o Ex.3 sugere "Antes da SQL responda", da a entender que devo realizar a query e diante disso
+irei aplicá-la na sequencia após considerar minha análise inicial das questões acima.
 
 ========================================================= */
+-- Produção
+WITH FaturamentoCliente AS (
+	SELECT
+		CustomerID AS IdCliente,
+		SUM(TotalDue) AS Faturamento
+	FROM [Sales].[SalesOrderHeader]
+	GROUP BY CustomerID
+
+),
+MediaEmpresa AS (
+	SELECT
+		AVG(Faturamento) AS FaturamentoEmpresa
+	FROM FaturamentoCliente
+)
+SELECT 
+	FC.IdCliente,
+	FC.Faturamento,
+	ME.FaturamentoEmpresa
+FROM FaturamentoCliente FC
+CROSS JOIN MediaEmpresa ME
+WHERE FC.Faturamento > ME.FaturamentoEmpresa
+ORDER BY FC.Faturamento DESC;
+
+-- Análise da diretoria ou utilização de outros agentes (BI,CRM,etc.)
+WITH FaturamentoCliente AS (
+	SELECT
+		CustomerID AS IdCliente,
+		SUM(TotalDue) AS Faturamento
+	FROM [Sales].[SalesOrderHeader]
+	GROUP BY CustomerID
+
+),
+MediaEmpresa AS (
+	SELECT
+		AVG(Faturamento) AS FaturamentoEmpresa
+	FROM FaturamentoCliente
+)
+SELECT 
+	FC.IdCliente,
+	FORMAT(FC.Faturamento,'C','pt-BR') AS FaturamentoDoCliente,
+	FORMAT(ME.FaturamentoEmpresa,'C','pt-BR') AS MediaFaturamentoEmpresa
+FROM FaturamentoCliente FC
+CROSS JOIN MediaEmpresa ME
+WHERE FC.Faturamento > ME.FaturamentoEmpresa
+ORDER BY FC.Faturamento DESC;
 
 -- Ex.4
 /* =========================================================
