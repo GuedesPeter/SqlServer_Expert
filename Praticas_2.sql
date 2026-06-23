@@ -511,14 +511,37 @@ Identificar possíveis pedidos repetidos.
 🧠 PERGUNTAS GUIADAS:
 
 1. O que caracteriza duplicidade?
+Pedidos com o mesmo ID, por exemplo.
 2. GROUP BY ajudaria?
+Inicialmente devo analisar a tabela de pedidos mas creio que possa auxiliar caso eu necessite
+agrupar os pedidos
 3. HAVING entra?
+Pela ótica inicial pode ser uma possibilidade útil, de modo que eu possa utilizar para
+validar se a contagem de ID iguais é maior que 1 por exemplo, mas será analisado durante a 
+construção
 4. COUNT será usado para quê?
+Não contar pedidos.
+
+Mas contar ocorrências
+de um mesmo agrupamento.
 5. Granularidade final?
-
+1 linha = 1 Pedido.
 ========================================================= */
+-- RESOLUÇÃO:
 
+--Após analisar o modelo de dados,não é possível haver dois registros com o mesmo SalesOrderID, pois trata-se da chave primária da tabela.
 
+--Para prosseguirmos com a análise, precisamos definir objetivamente o que será considerado um "pedido duplicado".
+
+--Exemplos:
+--- Mesmo cliente e mesmo valor?
+--- Mesmo cliente, mesma data e mesmos produtos?
+--- Pedido importado mais de uma vez?
+--- Outro critério?
+
+--Após essa definição, será possível elaborar a consulta SQL adequada.
+--Considero o EX 19 encerrado do ponto de vista de análise de requisitos, 
+--com a conclusão de que não há elementos suficientes para produzir uma solução SQL que represente corretamente o problema de negócio.
 
 /* =========================================================
 🧠 EX 20 — PREPARAÇÃO PARA REMOÇÃO EM MASSA
@@ -538,9 +561,15 @@ Identificar pedidos antigos candidatos à exclusão.
 🧠 PERGUNTAS GUIADAS:
 
 1. DELETE deve ser imediato?
+Não, o que deve ser imediato quando se fala em query é a realização de um SELECT 
+para validar os registros.
 2. DATEADD ajudará?
+No caso do Adventureworks não, pois ele não possui registros dos dias atuais
 3. Vale começar com SELECT?
+Devemos começar com ele
 4. TRANSACTION faria sentido?
+Se de fato for constatado que os registros serão excluídos, a transaction deve ser aplicada
+para "proteger" a operação.
 5. Como evitar remoções incorretas?
-
+Fazendo as devidas validações e protegendo a operação com TRY CATCH e TRANSACTIONS
 ========================================================= */
