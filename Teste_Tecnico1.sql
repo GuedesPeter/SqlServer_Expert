@@ -251,10 +251,20 @@ Faça uma análise técnica.
 Explique:
 
 • O requisito é suficiente?
+Pela ótica inicial, é um cenário muito vago.
+Isso torna a análise insuficiente.
+Para mensurar certa redução no faturamento, ao menos o setor financeiro deveria apresentaruma ou
+algumas métricas que corroborem com sua afirmação.
 
 • Que perguntas precisam ser feitas?
+Posso sugerir como exemplo as seguintes perguntas:
+Com base em qual métrica o setor identificou esta redução?
+De qual modo a redução no faturamento ocorreu?
+Quais clientes apresentam este cenário?
+Em qual período tal cenário ocorreu ou ficou evidente?
 
 • Você implementaria algo?
+Não. Aguardaria informações concretas ou um direcionamento quanto ao cenário informado pelo setor financeiro
 
 ========================================================= */
 
@@ -284,7 +294,7 @@ quando armazenaria essa classificação
 e quando apenas a calcularia.
 
 ========================================================= */
-
+ -- CENARIO FINALIZADO INTERNAMENTE
 
 -- EX.6
 /* =========================================================
