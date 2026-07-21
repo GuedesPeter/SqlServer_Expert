@@ -293,8 +293,21 @@ a abordagem pedagógica.
 quando armazenaria essa classificação
 e quando apenas a calcularia.
 
+1.Abordagem profissional
+A implementação seria interrompida até que a empresa definisse a regra de negócio para classificar clientes como Ouro, Prata ou Bronze.
+Seriam levantadas perguntas sobre critérios, finalidade da classificação, periodicidade de atualização e impacto dessa informação.
+
+2.Abordagem pedagógica
+O exercício não fornece elementos suficientes para construir uma hipótese consistente.
+Qualquer classificação (por faturamento, frequência, ticket médio etc.) seria uma premissa arbitrária do desenvolvedor e não uma conclusão baseada no requisito.
+Portanto, opto por não criar regras hipotéticas que possam induzir uma solução artificial.
+
+3.Armazenar ou calcular
+Essa decisão depende da finalidade da classificação.
+Sem conhecer a regra de negócio, a frequência de atualização e o consumo dessa informação, não é possível decidir tecnicamente entre persistir o dado ou calculá-lo sob demanda.
+
 ========================================================= */
- -- CENARIO FINALIZADO INTERNAMENTE
+
 
 -- EX.6
 /* =========================================================
@@ -310,12 +323,40 @@ Não execute nada.
 Descreva:
 
 • Ordem das operações.
+Levantar e validar a regra de negócio.
+Identificar a entidade correta para persistência.
+Validar impacto da alteração.
+Criar a estrutura necessária.
+Validar os dados com SELECT.
+Atualizar os registros.
+Validar o resultado.
+Confirmar a transação.
+
+• Próximas questões
+- Inicialmente eu solicitaria saber destes pontos:
+	Qual é a regra utilizada para definir tal classificação?
+	Qual fator ou métrica define essa regra?
+	
 
 • Validações.
+- Para validações, levantaria estes pontos:
+	Quais métricas definem o grau de classificação?
+	Quais devem ser estas classificações?
+	Essa classificação é mutável ou imutável?
+	Em quais entidade faria sentido armazenar essa informação?
 
 • Segurança.
+- Pontos a considerar na segurança:
+	Quais entidades receberão a classificação?
+	Qual tipo de dado deve ser utilizado para armazenar a informação?
+	A seleção dos dados devem ser analizadas obrigatoriamente antes da persistencia dos dados.
+	Quem terá a permissão para selecionar, analizar, classificar e armazenar estes dados?
+	Qual será a frequencia da classificação?
 
 • Como faria rollback.
+- Por fim:
+Esse processo de armazenamento deve sempre ocorrer dentro de uma Transaction,
+na qual deverá ter definida em sua contrução os tratamentos de erros, commit e rollback.
 
 ========================================================= */
 
