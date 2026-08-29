@@ -378,10 +378,22 @@ Explique:
 • Por que este requisito
 não pode ser implementado?
 
+O requisito não possui informações suficientes para definir quais registros podem ser removidos com segurança.
+
 • Quais riscos existem?
+
+Nesse caso há o risco real de perda de informações, afetadndo diretamente o passado,
+presente e futuro da empresa.
 
 • Como responderia
 ao solicitante?
+
+"Caro sr.Diretor,
+No momento, não dispomos dos critérios necessários para determinar quais pedidos podem ser removidos com segurança.
+Ressalto que tal solicitação gera um efeito crítico, no qual impactará o histórico e dia a dia da empresa.
+Caso deseje seguir com a operação, solicito o critério que deverá ser aplicado para a execução.
+Sigo à disposição para esclarecimentos."
+
 
 ========================================================= */
 
@@ -403,15 +415,38 @@ Sem escrever SQL,
 explique:
 
 • O cenário faz sentido?
+O modelo impede duplicidade da chave SalesOrderID, mas isso não é suficiente para determinar se existe duplicidade do ponto de vista do negócio.
 
 • Existe conflito
 entre requisito e modelo?
 
+O conflito está justamente aqui:
+
+Modelo
+
+O banco garante algo como:
+
+Um SalesOrderID não pode aparecer duas vezes como identificador do pedido.
+
+Requisito
+
+O negócio está dizendo:
+
+"Existem pedidos duplicados."
+
+Essas duas afirmações podem coexistir.
+
+Porque estamos falando de conceitos diferentes.
+
 • Como conduziria
 essa demanda?
+Faria alguns questionamentos, como por exemplo:
+O que determina que um pedido está duplicado?
+Onde foi identificada tal duplicidade?
+Qual a informação obtida está levantando este cenário?
+Quais evidencias justificam que há duplicidades e onde se mostram?
 
 ========================================================= */
-
 
 -- EX.9
 /* =========================================================
@@ -432,11 +467,35 @@ Não escreva código.
 Explique:
 
 • Quais informações retornaria?
+Inicialmente eu questionaria: o que define um historico comercial?
+Quais informações são relevantes para estarem visiveis no relatório/historico do cliente?
+Alguma regra de negócio deve ser considerada?
+Há algum status do cliente que devo considerar?
+Como deve ser exibido este historico? Em qual formato?
 
 • Como organizaria
 a procedure?
 
+Organizaria pelo parametro que o gerente deseja informar (CustomerID).
+Exemplo:
+
+CREATE OR ALTER PROCEDURE NomeProcedure
+    @CustomerID INT
+AS
+BEGIN
+
+    SET NOCOUNT ON;
+
+    -- Comandos SQL...
+
+END;
+
+
 • Que validações faria?
+Inicialmente o cenário deve estar bem definido. Após eu faria algo como validação dos parametros,
+validação de exixtencia, etc.
+
+
 
 ========================================================= */
 
@@ -471,22 +530,64 @@ das futuras solicitações.
 
 /* =========================================================
 
-🎯 O QUE ESTE TESTE REALMENTE AVALIA
+RELATÓRIO TÉCNICO - Por Paulo Peter
 
-Perceba que, dos 10 exercícios:
+Este documento tem a finalidade de descrever as considerações e conclusões dos cenários apresentados nos
+10 exercícios propostos.
 
-apenas 2 exigem necessariamente SQL;
-os demais exigem análise, comunicação e tomada de decisão.
+Exercício 1:
+Aqui o diretor comercial solicitou conhecer os 15 clientes mais importantes da empresa.
+Neste cenário o requisito que define um cliente como "importante" não foi apresentado,
+tornando a solicitação do gerente incompleta.(Requisitos incompletos)
 
-Isso foi intencional.
+Exercício 2:
+Neste cenário o caso anterior evoluiu, onde o diretor definiu que o cliente a ser considerado importante seria o
+cliente que mais faturou.
+Aqui foi apresentada a solução exibindo e classificando o cliente conforme seu faturamento.(Requisitos corretos)
 
-Depois das últimas semanas, ficou claro para mim que você já está desenvolvendo a sintaxe de forma consistente. 
-O próximo passo é fortalecer uma competência que diferencia bons profissionais: saber quando não escrever SQL.
+Exercício 3:
+No cenário do exercício 3 foi solicitado identificar clientes que possuem faturamento acima
+da média geral da empresa.
+Neste ponto foi apresentada a solução comparando o faturamento de cada cliente com a media de faturamento 
+da empresa.(Requisitos corretos)
 
-Há uma frase que resume muito bem esse teste e que gostaria que você levasse para a carreira:
+Exercício 4:
+Neste cenário o financeiro afirmou que alguns clientes reduziram muito o
+faturamento, porém não definiu o requisito que determinou a redução do faturamento e nem
+quais clientes apresentaram o caso. Aqui o requisito se fez incompleto.
 
-"A melhor consulta SQL do mundo continua sendo a solução errada quando resolve um requisito mal definido."
+Exercício 5:
+Aqui a empresa desejou classificar os clientes como Ouro, Prata e Bronze.
+Conforme análise, se faz necessária a definição da regra que embasa tal classificação,
+portanto, o requisito está incompleto para a apresentação de uma solução.
 
-Essa frase sintetiza praticamente tudo o que construímos ao longo das duas baterias.
+Exercício 6:
+Seguindo o cenário do exercício 5, aqui a empresa desejou armazenar a classificação do cliente.
+Conforme análise realizada, a descrição do cenário foi aplicada contendo:
+ordem das Operações;
+questionamentos;
+validações;
+segurança;
+persistencia.
+Aqui o cenário apresentou uma condução descritiva.
+
+Exercício 7:
+No exercício 7 o diretor solicitou a remoção de pedidos antigos.
+Este caso apresentou riscos e recusa a implementação na primeira abordagem pois não foi
+informado pelo diretor um critério para a aplicação da operação.
+
+Exercício 8:
+Neste cenário a equipe suspeitou na duplicidade dos pedidos.
+Conforme análise, o modelo impede duplicidade da chave SalesOrderID, mas isso não é suficiente para determinar se existe duplicidade do ponto de vista do negócio.
+Aqui minha sugestão se fez presente para uma melhor definição do cenário, auxiliando na tomada de decisão.
+
+Exercício 9:
+O gerente pediu uma Stored Procedure para consultar o histórico comercial de um cliente, porém não 
+apresentou uma definição ou regras para a contrução de uum histórico comercial para o cliente.
+Aqui questionei uma melhor definição do cenário, com o objetivo de aplicar uma construção segura para a solução.
+
+Exercício 10:
+Vide as respostas anteriores.
+Teste Técnico CONCLUÍDO.
 
 ========================================================= */
